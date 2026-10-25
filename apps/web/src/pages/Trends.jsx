@@ -1,0 +1,6 @@
+import React, { useState } from "react"; import { api } from "../services/api.js"; import { ListPage } from "./Generic.jsx";
+export default function Trends(){ const [topic,setTopic]=useState(""); const [msg,setMsg]=useState("");
+  const add=async()=>{ try{ const t=await api.post("/api/trends/topics",{topic, momentum:50, freshness:50, relevance:50, sourceQuality:50, feasibility:50}); setMsg(`Saved topic, score ${t.score}/100. ${t.scoreExplanation}`); }catch(e){ setMsg(e.message); } };
+  return <div><h2 className="text-2xl font-bold">Trend Research</h2><p className="text-slate-400">Scores are a 30/25/20/15/10 heuristic on editor-entered components. No live search volume or demographics are invented.</p>
+  <div className="card mt-4 flex gap-2"><input className="input" value={topic} onChange={e=>setTopic(e.target.value)} placeholder="Manual research topic"/><button className="btn" onClick={add}>Save topic</button></div>{msg && <p className="mt-2">{msg}</p>}
+  <div className="mt-6"><ListPage title="Topics" path="/api/trends/topics" render={t=><div><div className="flex justify-between"><strong>{t.topic}</strong><span>{t.score}/100 · {t.status}</span></div><p className="text-sm text-slate-400">{t.scoreExplanation}</p></div>}/></div></div>; }

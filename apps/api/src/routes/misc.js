@@ -1,0 +1,11 @@
+import { Router } from "express"; import { prisma } from "../db/prisma.js"; import { ok } from "../errors.js"; import { systemHealth } from "../services/health.js";
+const r=Router();
+r.get("/settings", async (req,res)=>{ const s=await prisma.settings.findUnique({where:{id:"default"}}); const {youtubeClientId, ...rest}=s||{}; ok(res,{...rest, youtubeConfigured:!!process.env.YOUTUBE_CLIENT_ID}); });
+r.patch("/settings", async (req,res)=>{ const allowed=["targetCountry","language","voicePreference","targetDuration","visualStyle","videosPerWeek","timezone","defaultPrivacy","ollamaUrl","ollamaModel","comfyUrl","ttsCommand"]; const data={}; for(const k of allowed) if(req.body[k]!==undefined) data[k]=req.body[k]; ok(res, await prisma.settings.update({where:{id:"default"}, data})); });
+r.get("/system", async (req,res)=>{ const s=await prisma.settings.findUnique({where:{id:"default"}}); ok(res, await systemHealth(s)); });
+r.get("/logs", async (req,res)=>{ ok(res, await prisma.jobEvent.findMany({orderBy:{createdAt:"desc"}, take:200})); });
+r.get("/templates", async (req,res)=>{ ok(res, await prisma.workflowTemplate.findMany()); });
+r.post("/templates", async (req,res)=>{ ok(res, await prisma.workflowTemplate.create({data:{name:req.body.name||"Template", description:req.body.description||"", config:JSON.stringify(req.body.config||{})}}), 201); });
+r.get("/renders", async (req,res)=>{ ok(res, await prisma.renderJob.findMany({orderBy:{createdAt:"desc"}, take:100})); });
+r.get("/publishes", async (req,res)=>{ ok(res, await prisma.publishJob.findMany({orderBy:{createdAt:"desc"}, take:100})); });
+export default r;

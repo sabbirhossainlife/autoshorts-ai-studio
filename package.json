@@ -1,0 +1,1 @@
+{"name":"autoshorts-ai-studio","private":true,"version":"1.0.0","scripts":{"dev:api":"npm --prefix apps/api run dev","dev:web":"npm --prefix apps/web run dev","build:web":"npm --prefix apps/web run build","test:api":"npm --prefix apps/api test","test:web":"npm --prefix apps/web test","seed:demo":"node apps/api/scripts/seed-demo.js"}}

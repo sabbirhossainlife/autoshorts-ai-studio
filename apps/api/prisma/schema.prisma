@@ -1,0 +1,303 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  passwordHash       String
+  role               String              @default("ADMIN")
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  projects           Project[]
+  youtubeConnections YouTubeConnection[]
+  auditLogs          AuditLog[]
+}
+
+model Settings {
+  id                 String   @id @default("default")
+  targetCountry      String   @default("US")
+  language           String   @default("en")
+  voicePreference    String   @default("")
+  targetDuration     Int      @default(30)
+  visualStyle        String   @default("cinematic")
+  videosPerWeek      Int      @default(3)
+  timezone           String   @default("America/New_York")
+  publicationWindows String   @default("[]")
+  exclusions         String   @default("[]")
+  trustedSources     String   @default("[]")
+  avoidedSources     String   @default("[]")
+  requireApproval    Boolean  @default(true)
+  defaultPrivacy     String   @default("private")
+  ollamaUrl          String   @default("http://127.0.0.1:11434")
+  ollamaModel        String   @default("llama3.1")
+  comfyUrl           String   @default("http://127.0.0.1:8188")
+  ttsCommand         String   @default("")
+  youtubeClientId    String   @default("")
+  updatedAt          DateTime @updatedAt
+}
+
+model YouTubeConnection {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  channelId       String    @default("")
+  channelTitle    String    @default("")
+  accessTokenEnc  String    @default("")
+  refreshTokenEnc String    @default("")
+  scope           String    @default("")
+  expiresAt       DateTime?
+  connectedAt     DateTime  @default(now())
+  status          String    @default("connected")
+}
+
+model Category {
+  id          String       @id @default(cuid())
+  name        String
+  nameEn      String       @default("")
+  description String       @default("")
+  isCustom    Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  topics      TrendTopic[]
+  projects    Project[]
+}
+
+model ResearchSource {
+  id            String       @id @default(cuid())
+  name          String
+  url           String
+  type          String       @default("rss")
+  enabled       Boolean      @default(true)
+  lastCheckedAt DateTime?
+  lastStatus    String       @default("unknown")
+  lastError     String       @default("")
+  createdAt     DateTime     @default(now())
+  topics        TrendTopic[]
+}
+
+model TrendTopic {
+  id               String             @id @default(cuid())
+  topic            String
+  categoryId       String?
+  category         Category?          @relation(fields: [categoryId], references: [id])
+  sourceId         String?
+  source           ResearchSource?    @relation(fields: [sourceId], references: [id])
+  sourceUrl        String             @default("")
+  sourceTitle      String             @default("")
+  publishedAt      DateTime?
+  researchedAt     DateTime           @default(now())
+  momentum         Float              @default(0)
+  freshness        Float              @default(0)
+  relevance        Float              @default(0)
+  sourceQuality    Float              @default(0)
+  feasibility      Float              @default(0)
+  score            Float              @default(0)
+  scoreExplanation String             @default("")
+  status           String             @default("new")
+  evidence         ResearchEvidence[]
+  projects         Project[]
+}
+
+model ResearchEvidence {
+  id        String     @id @default(cuid())
+  topicId   String
+  topic     TrendTopic @relation(fields: [topicId], references: [id])
+  url       String
+  title     String     @default("")
+  excerpt   String     @default("")
+  fetchedAt DateTime   @default(now())
+}
+
+model Project {
+  id          String            @id @default(cuid())
+  title       String
+  categoryId  String?
+  category    Category?         @relation(fields: [categoryId], references: [id])
+  topicId     String?
+  topic       TrendTopic?       @relation(fields: [topicId], references: [id])
+  ownerId     String?
+  owner       User?             @relation(fields: [ownerId], references: [id])
+  state       String            @default("draft")
+  durationSec Int               @default(30)
+  approved    Boolean           @default(false)
+  isDemo      Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  scripts     Script[]
+  scenes      Scene[]
+  assets      MediaAsset[]
+  voices      VoiceGeneration[]
+  renders     RenderJob[]
+  publishes   PublishJob[]
+  queueJobs   QueueJob[]
+  events      JobEvent[]
+}
+
+model Script {
+  id                String   @id @default(cuid())
+  projectId         String
+  project           Project  @relation(fields: [projectId], references: [id])
+  title             String
+  hook              String   @default("")
+  narrative         String   @default("")
+  payoff            String   @default("")
+  cta               String   @default("")
+  sources           String   @default("[]")
+  pronunciation     String   @default("[]")
+  durationSec       Int      @default(30)
+  confidence        String   @default("unverified")
+  verificationNotes String   @default("[]")
+  rawJson           String   @default("")
+  createdAt         DateTime @default(now())
+}
+
+model Scene {
+  id             String   @id @default(cuid())
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id])
+  number         Int
+  narration      String
+  durationSec    Float
+  imagePrompt    String   @default("")
+  negativePrompt String   @default("")
+  visualStyle    String   @default("")
+  cameraMotion   String   @default("zoompan")
+  subtitle       String   @default("")
+  imagePath      String   @default("")
+  status         String   @default("pending")
+  createdAt      DateTime @default(now())
+}
+
+model MediaAsset {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  kind        String
+  path        String
+  origin      String   @default("manual")
+  license     String   @default("")
+  width       Int?
+  height      Int?
+  durationSec Float?
+  createdAt   DateTime @default(now())
+}
+
+model VoiceGeneration {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  sceneNumber Int?
+  text        String
+  engine      String
+  voice       String   @default("")
+  speed       Float    @default(1)
+  pitch       Float    @default(1)
+  audioPath   String   @default("")
+  durationSec Float?
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+}
+
+model RenderJob {
+  id            String   @id @default(cuid())
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id])
+  status        String   @default("queued")
+  outputPath    String   @default("")
+  thumbnailPath String   @default("")
+  width         Int      @default(1080)
+  height        Int      @default(1920)
+  error         String   @default("")
+  progress      Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model PublishJob {
+  id          String    @id @default(cuid())
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id])
+  status      String    @default("queued")
+  videoId     String    @default("")
+  videoUrl    String    @default("")
+  privacy     String    @default("private")
+  scheduledAt DateTime?
+  error       String    @default("")
+  createdAt   DateTime  @default(now())
+}
+
+model PublishedVideo {
+  id           String   @id @default(cuid())
+  publishJobId String   @unique
+  title        String
+  videoId      String
+  videoUrl     String
+  privacy      String   @default("private")
+  publishedAt  DateTime @default(now())
+}
+
+model AnalyticsSnapshot {
+  id        String   @id @default(cuid())
+  videoId   String   @default("")
+  metric    String
+  value     Float
+  source    String   @default("youtube")
+  fetchedAt DateTime @default(now())
+}
+
+model WorkflowTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @default("")
+  config      String   @default("{}")
+  createdAt   DateTime @default(now())
+}
+
+model QueueJob {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  type        String
+  status      String   @default("queued")
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(3)
+  payload     String   @default("{}")
+  error       String   @default("")
+  nextRunAt   DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model JobEvent {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  type      String
+  message   String
+  level     String   @default("info")
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String
+  recordType String   @default("")
+  recordId   String   @default("")
+  detail     String   @default("")
+  createdAt  DateTime @default(now())
+}
+
+model OAuthState {
+  id        String   @id @default(cuid())
+  stateHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}

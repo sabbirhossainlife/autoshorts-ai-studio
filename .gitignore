@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.db
+*.db-journal
+storage/projects/
+storage/images/
+storage/audio/
+storage/videos/
+storage/thumbnails/
+storage/temp/
+.env
+!.env.example

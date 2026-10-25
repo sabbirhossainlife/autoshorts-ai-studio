@@ -1,0 +1,4 @@
+import { prisma } from "../db/prisma.js";
+export async function ensureSettings(){ let s=await prisma.settings.findUnique({where:{id:"default"}}); if(!s) s=await prisma.settings.create({data:{id:"default"}}); return s; }
+export async function seedCategories(){ const names=["AI and Technology","Science and Space","History and Mystery","Business and Entrepreneurship","Educational Facts","Nature and Wildlife"]; for(const n of names) await prisma.category.upsert({where:{id:"cat-"+n}, create:{id:"cat-"+n, name:n}, update:{}}); }
+export async function bootstrap(){ await ensureSettings(); await seedCategories(); if((await prisma.workflowTemplate.count())===0){ await prisma.workflowTemplate.create({data:{name:"Standard Short", description:"Default 30s educational short template", config:JSON.stringify({width:1080,height:1920,fps:30})}}); } }

@@ -1,0 +1,11 @@
+import { PrismaClient } from "@prisma/client"; import bcrypt from "bcryptjs";
+const prisma=new PrismaClient();
+const user=await prisma.user.upsert({where:{email:"demo@autoshorts.local"}, update:{}, create:{email:"demo@autoshorts.local", passwordHash:await bcrypt.hash("DemoPass123",12)}});
+let settings=await prisma.settings.findUnique({where:{id:"default"}}); if(!settings) settings=await prisma.settings.create({data:{id:"default"}});
+const cat=await prisma.category.upsert({where:{id:"cat-Educational Facts"}, create:{id:"cat-Educational Facts", name:"Educational Facts"}, update:{}});
+const project=await prisma.project.create({data:{title:"Demo: Why the Moon Looks Bigger Near the Horizon", categoryId:cat.id, ownerId:user.id, durationSec:30, isDemo:true, state:"script_review"}});
+await prisma.script.create({data:{projectId:project.id, title:"Why the Moon Looks Bigger Near the Horizon", hook:"The Moon is not actually bigger near the horizon — your brain is tricking you.", narrative:"This is a clearly labelled DEMO script. It explains the Moon illusion in simple terms for previewing the studio workflow.", payoff:"Next time the Moon looks huge, remember: it is perception, not size.", cta:"Follow for more space facts.", sources:JSON.stringify(["Demo only — replace with verified sources before publishing"]), durationSec:30, confidence:"demo"}});
+const scenes=[["The Moon rises over a city skyline.",10,"Moon rising over city skyline, cinematic"],["A diagram of the eye and brain.",10,"Simple diagram of human eye and brain, educational"],["The Moon high in the night sky.",10,"Moon high in dark night sky, stars"]];
+for(let i=0;i<scenes.length;i++) await prisma.scene.create({data:{projectId:project.id, number:i+1, narration:scenes[i][0], durationSec:scenes[i][1], imagePrompt:scenes[i][2], subtitle:scenes[i][0]}});
+console.log("Demo project created:", project.id, "(demo@autoshorts.local / DemoPass123 — change after first login)");
+await prisma.$disconnect();

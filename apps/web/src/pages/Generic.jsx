@@ -1,0 +1,3 @@
+import React, { useEffect, useState } from "react"; import { api } from "../services/api.js";
+export function ListPage({title, path, render}){ const [items,setItems]=useState([]); const [err,setErr]=useState(""); useEffect(()=>{ api.get(path).then(d=>setItems(Array.isArray(d)?d:(d.items||[]))).catch(e=>setErr(e.message)); },[path]); return <div><h2 className="text-2xl font-bold">{title}</h2>{err && <p className="text-red-400">{err}</p>}<div className="space-y-2 mt-4">{items.map((it,i)=><div key={it.id||i} className="card">{render?render(it):JSON.stringify(it)}</div>)}</div></div>; }
+export function SimplePage({title, children}){ return <div><h2 className="text-2xl font-bold">{title}</h2><div className="mt-4 space-y-4">{children}</div></div>; }
