@@ -1,5 +1,7 @@
 # AutoShorts AI Studio
 
+🌐 **Live demo (frontend only):** https://autoshorts-ai-studio.netlify.app — backend (Express + SQLite + Ollama/ComfyUI/FFmpeg) runs locally, so live backend features show as unavailable until a backend is connected.
+
 Local-first, production-minded studio for original English YouTube Shorts for US viewers. Free local tools wherever feasible; no paid AI API or purchased credits required for the core local workflow.
 
 ## Architecture
